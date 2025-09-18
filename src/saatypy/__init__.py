@@ -6,7 +6,7 @@ from saatypy.components.modeling import Node, Cluster
 from saatypy.anp import Supermatrix, ANPModel, ANPBuilder
 from saatypy.ahp import AHPModel, AHPBuilder
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "Label",
