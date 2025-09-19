@@ -7,9 +7,11 @@ class StructureError(ModelError):
 class NormalizationError(ModelError):
     """Raised when labeled normalization of vectors/matrices fails."""
 
+class DuplicatedCluster(ModelError):
+    """Raised when trying to add a cluster with a duplicate name."""
+    
 class UnknownLabel(ModelError):
-    """Raised when refer the label that isn't registered to the model."""
-
+    """Raised when referencing a label that isn't registered."""
 
 class ConsistencyError(ModelError):
     """Raised when a matrix is internally inconsistent (e.g., mismatched reciprocals)."""

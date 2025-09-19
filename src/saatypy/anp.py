@@ -6,7 +6,6 @@ from typing import (
     Optional,
     Tuple,
     Mapping,
-    Iterable,
     Union,
     overload,
     Any,
@@ -18,10 +17,14 @@ from typing import cast
 
 import numpy as np
 
-from saatypy.components.types import Label, FloatArray, BlockMeta,ANPReportData
+from saatypy.components.types import Label, FloatArray, BlockMeta, ANPReportData
 from saatypy.components.pairwise import PairwiseComparison
-from saatypy.components.modeling import Node, Cluster
-from saatypy.components.errors import StructureError, NormalizationError
+from saatypy.components.modeling import Cluster
+from saatypy.components.errors import (
+    StructureError,
+    NormalizationError,
+    DuplicatedCluster,
+)
 from saatypy.components.math import (
     normalize_columns_inplace,
     normalize_vector_nonneg,
@@ -123,8 +126,8 @@ class Supermatrix:
                 rebuilt[(i_cluster.name, j_cluster.name)] = dense[i0:i1, j0:j1].copy()
 
         return Supermatrix(blocks=rebuilt, order=self.order)
-    
-    
+
+
 @dataclass(slots=True)
 class ANPModel(DecisionModel):
     """High-level ANP model with flexible, label-safe APIs."""
@@ -158,7 +161,9 @@ class ANPModel(DecisionModel):
             extra = set(weights.keys()) - set(names)
             missing = set(names) - set(weights.keys())
             if extra or missing:
-                raise ValueError(f"Cluster weights mismatch. Missing={missing}, Extra={extra}")
+                raise ValueError(
+                    f"Cluster weights mismatch. Missing={missing}, Extra={extra}"
+                )
         if isinstance(weights, PairwiseComparison):
             if set(weights.labels) != set(names):
                 raise ValueError("Cluster PC labels must match cluster names")
@@ -279,7 +284,6 @@ class ANPModel(DecisionModel):
             "shape": (i.size, j.size),
         }
 
-
     def build_supermatrix(self) -> Supermatrix:
         blocks: Dict[Tuple[Label, Label], FloatArray] = {}
         for ci in self.clusters:
@@ -300,15 +304,16 @@ class ANPModel(DecisionModel):
                 colsum = None
                 for ci in self.clusters:
                     B = blocks[(ci.name, src.name)]
-                    colsum = B.sum(axis=0) if colsum is None else (colsum + B.sum(axis=0))
+                    colsum = (
+                        B.sum(axis=0) if colsum is None else (colsum + B.sum(axis=0))
+                    )
                 if np.allclose(colsum, 0.0):
                     n = src.size
                     if n > 0:
                         self_loop = np.ones((n, n), dtype=np.float64) / float(n)
                         blocks[(src.name, src.name)] = self_loop
         return Supermatrix(blocks=blocks, order=self.clusters)
-    
-    
+
     def _row_slice(self, cluster_name: Label) -> slice:
         start = 0
         for c in self.clusters:
@@ -360,7 +365,6 @@ class ANPModel(DecisionModel):
         gp, alts = self.alternative_priorities()
         ranking = sorted(zip(alts, gp.tolist()), key=lambda x: x[1], reverse=True)
 
-        # flatten block inputs keys to readable "(target ← source)"
         blocks: Dict[str, BlockMeta] = {}
         for (ti, sj), meta in self.block_inputs.items():
             key = f"({ti} ← {sj})"
@@ -378,39 +382,32 @@ class ANPModel(DecisionModel):
 
 
 class ANPBuilder:
-    """Ergonomic helper to build a model without repeating labels."""
+    """
+    Ergonomic helper to build an ANP model using canonical ANP structures.
+    """
+
+    ALTERNATIVE_CLUSTER_NAME = "alternative"
 
     def __init__(self) -> None:
-        self._clusters: List[Cluster] = []
-        self._alts: Optional[Label] = None
+        self._clusters: list[Cluster] = []
 
-    def add_cluster(self, name: Label, node_names: Iterable[Label]) -> Self:
-        names = list(node_names)
-        if len(set(names)) != len(names):
-            raise ValueError(f"Duplicate node names in cluster '{name}'")
-        # Check for duplicate cluster name
-        if any(c.name == name for c in self._clusters):
-            raise ValueError(f"Duplicate cluster name '{name}'")
-        nodes = [Node(n) for n in names]
-        self._clusters.append(Cluster(name=name, nodes=nodes))
-        return self
-
-    def add_alternatives(
-        self, alt_names: Iterable[Label], *, name: Label = "alternatives"
-    ) -> Self:
-        self.add_cluster(name, alt_names)
-        self._alts = name
+    def add_cluster(self, cluster: Cluster) -> Self:
+        if any(c.name == cluster.name for c in self._clusters):
+            raise DuplicatedCluster(f"Duplicate cluster name '{cluster.name}'")
+        self._clusters.append(cluster)
         return self
 
     def build(self) -> ANPModel:
-        if not self._alts_defined():
-            raise ValueError(
-                "You must define an alternatives cluster via .add_alternatives(...)"
+        alt = next(
+            (
+                c.name
+                for c in self._clusters
+                if c.name.lower() == self.ALTERNATIVE_CLUSTER_NAME
+            ),
+            None,
+        )
+        if alt is None:
+            raise StructureError(
+                f"Must include a cluster named '{self.ALTERNATIVE_CLUSTER_NAME}'"
             )
-        cnames = [c.name for c in self._clusters]
-        if len(set(cnames)) != len(cnames):
-            raise ValueError("Duplicate cluster names")
-        return ANPModel(clusters=self._clusters, alternatives_cluster=self._alts)
-
-    def _alts_defined(self) -> bool:
-        return self._alts is not None
+        return ANPModel(clusters=self._clusters, alternatives_cluster=alt)
