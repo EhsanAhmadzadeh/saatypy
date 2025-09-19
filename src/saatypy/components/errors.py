@@ -5,8 +5,10 @@ class StructureError(ModelError):
     """Invalid model structure (missing blocks, zero columns, etc.)."""
 
 class NormalizationError(ModelError):
-    """Raised when labeled normalization of vectors/matrices fails (label mismatch, etc.)."""
+    """Raised when labeled normalization of vectors/matrices fails."""
 
 class ConsistencyError(ModelError):
-    """Consistency threshold violations."""
+    """Raised when a matrix is internally inconsistent (e.g., mismatched reciprocals)."""
 
+class InvalidSaatyScaleError(ModelError):
+    """Raised when an input value is not on the Saaty 1–9 scale (or its reciprocal)."""
