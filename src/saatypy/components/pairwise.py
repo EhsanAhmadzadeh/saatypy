@@ -9,6 +9,7 @@ from saatypy.components.errors import (
     StructureError,
     ConsistencyError,
     NormalizationError,
+    UnknownLabel
 )
 
 
@@ -78,7 +79,7 @@ class PairwiseComparison(ConsistencyMixin):
 
         for (i, j), val in judgments.items():
             if i not in idx or j not in idx:
-                raise KeyError(f"Unknown label in judgment: ({i}, {j})")
+                raise UnknownLabel(f"Unknown label in judgment: ({i}, {j})")
             SaatyScale.apply_judgment(M, idx[i], idx[j], float(val), i, j)
 
         return cls(labels=labels_list, matrix=M)

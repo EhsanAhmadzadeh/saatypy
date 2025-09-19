@@ -78,9 +78,9 @@ def test_basic_ahp_weights(basic_ahp_model, laptop_criteria):
     pc = PairwiseComparison.from_judgments(
         laptop_criteria,
         {
-            ("performance", "price"): 2.0,
-            ("performance", "battery"): 3.0,
-            ("price", "battery"): 1.5
+            ("performance", "price"): 2,
+            ("performance", "battery"): 3,
+            ("price", "battery"): 1/5
         }
     )
     basic_ahp_model.set_criteria_weights(pc)
@@ -123,9 +123,9 @@ def test_alternative_priorities(basic_ahp_model):
         basic_ahp_model.set_alt_priorities(
             criterion,
             {
-                ("laptop_a", "laptop_b"): 2.0,
-                ("laptop_a", "laptop_c"): 3.0,
-                ("laptop_b", "laptop_c"): 1.5
+                ("laptop_a", "laptop_b"): 1/3,
+                ("laptop_a", "laptop_c"): 3,
+                ("laptop_b", "laptop_c"): 1/2
             }
         )
     
@@ -149,9 +149,9 @@ def test_ahp_reporting(basic_ahp_model):
     
     for criterion in ["performance", "price", "battery"]:
         basic_ahp_model.set_alt_priorities(criterion, {
-            ("laptop_a", "laptop_b"): 2.0,
-            ("laptop_a", "laptop_c"): 3.0,
-            ("laptop_b", "laptop_c"): 1.5
+            ("laptop_a", "laptop_b"): 2,
+            ("laptop_a", "laptop_c"): 3,
+            ("laptop_b", "laptop_c"): 1/4
         })
     
     # Get report data
@@ -192,7 +192,7 @@ def test_validation_errors(basic_ahp_model):
     with pytest.raises(KeyError):
         basic_ahp_model.set_alt_priorities(
             "unknown",
-            {("laptop_a", "laptop_b"): 2.0}
+            {("laptop_a", "laptop_b"): 1/4}
         )
 
 def test_hierarchical_validation(hierarchical_ahp_model):

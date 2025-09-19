@@ -103,9 +103,9 @@ def test_cluster_weights(basic_anp_model):
     pc = PairwiseComparison.from_judgments(
         ["market_factors", "competitors", "alternatives"],
         {
-            ("market_factors", "competitors"): 2.0,
-            ("market_factors", "alternatives"): 3.0,
-            ("competitors", "alternatives"): 1.5
+            ("market_factors", "competitors"): 2,
+            ("market_factors", "alternatives"): 3,
+            ("competitors", "alternatives"): 1/4
         }
     )
     basic_anp_model.set_cluster_weights(pc)

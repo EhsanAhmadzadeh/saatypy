@@ -46,9 +46,9 @@ def test_ahp_small_car_like_example():
     pc_crit = PairwiseComparison.from_judgments(
         ["performance", "price", "battery"],
         {
-            ("performance", "price"): 3.0,
-            ("performance", "battery"): 5.0,
-            ("price", "battery"): 2.0,
+            ("performance", "price"): 3,
+            ("performance", "battery"): 5,
+            ("price", "battery"): 2,
         }
     )
     model.set_criteria_weights(pc_crit)
@@ -56,9 +56,9 @@ def test_ahp_small_car_like_example():
     # Local alt priorities for each criterion
     # (A beats B beats C under each criterion, with varying strength)
     judg = {
-        ("A", "B"): 2.0,
-        ("A", "C"): 4.0,
-        ("B", "C"): 2.0,
+        ("A", "B"): 2,
+        ("A", "C"): 4,
+        ("B", "C"): 2,
     }
     for c in ["performance", "price", "battery"]:
         model.set_alt_priorities(c, judg)

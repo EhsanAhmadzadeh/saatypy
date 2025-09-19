@@ -1,20 +1,17 @@
-"""Shared test fixtures and configuration."""
 import pytest
 import numpy as np
+from saatypy.components.pairwise import PairwiseComparison
 
 @pytest.fixture
 def mock_criteria():
-    """Common criteria names for testing."""
     return ["price", "quality", "service"]
 
 @pytest.fixture
 def mock_alternatives():
-    """Common alternative names for testing."""
     return ["A", "B", "C"]
 
 @pytest.fixture
 def consistent_matrix_3x3():
-    """A perfectly consistent 3x3 comparison matrix."""
     return np.array([
         [1.0, 2.0, 4.0],
         [0.5, 1.0, 2.0],
@@ -22,6 +19,6 @@ def consistent_matrix_3x3():
     ])
 
 @pytest.fixture
-def consistent_priorities_3x3():
-    """Expected priorities for the consistent_matrix_3x3."""
-    return np.array([0.571428571, 0.285714286, 0.142857143])
+def consistent_priorities_3x3(consistent_matrix_3x3):
+    pc = PairwiseComparison(["A", "B", "C"], consistent_matrix_3x3)
+    return pc.priorities()

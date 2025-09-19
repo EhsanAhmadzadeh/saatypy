@@ -7,6 +7,10 @@ class StructureError(ModelError):
 class NormalizationError(ModelError):
     """Raised when labeled normalization of vectors/matrices fails."""
 
+class UnknownLabel(ModelError):
+    """Raised when refer the label that isn't registered to the model."""
+
+
 class ConsistencyError(ModelError):
     """Raised when a matrix is internally inconsistent (e.g., mismatched reciprocals)."""
 
